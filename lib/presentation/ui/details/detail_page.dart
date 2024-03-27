@@ -1,24 +1,23 @@
 import 'dart:io';
 
+import 'package:books/features/data/mapper/gutenberg/e_book_mapper.dart';
 import 'package:books/features/domain/database/ebook_database.dart';
-import 'package:books/features/domain/entity/book_entity.dart';
+import 'package:books/features/domain/entity/gutenberg/e_book_entity.dart';
 import 'package:books/features/domain/entity/gutenberg/result_entity.dart';
-import 'package:books/features/domain/entity/item_entity.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:books/presentation/widgets/detail_body.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:vocsy_epub_viewer/epub_viewer.dart';
 
 import '../../../core/resource/app_colors.dart';
 import '../../../core/resource/app_values.dart';
-import '../../../utils/pages.dart';
-import '../webview/my_webview.dart';
 
 class DetailPage extends StatefulWidget {
   const DetailPage({super.key});
@@ -27,15 +26,28 @@ class DetailPage extends StatefulWidget {
   State<DetailPage> createState() => _DetailPageState();
 }
 
-class _DetailPageState extends State<DetailPage> {
+class _DetailPageState extends State<DetailPage> with WidgetsBindingObserver {
+  bool loading = false;
+  Dio dio = Dio();
+  ResultEntity? resultEntity;
+  String? filePath;
+
+  Future<void> getLocalBook(int? remoteId, BuildContext context) async {
+    final eBookDatabase = context.watch<EBookDatabase>();
+    eBookDatabase.fetchResultOne(remoteId);
+    resultEntity = eBookDatabase.currentResultEntity;
+    filePath = resultEntity?.localPath ?? '';
+  }
+
   @override
   Widget build(BuildContext context) {
     MediaQueryData mediaQueryData = MediaQuery.of(context);
     var size = mediaQueryData.size;
-
     final args = ModalRoute.of(context)!.settings.arguments
         as Map<String, ResultEntity?>;
-    final item = args['item']!;
+    ResultEntity? item = args['item']!;
+
+    getLocalBook(item.remoteId, context);
 
     return SafeArea(
       child: Scaffold(
@@ -56,234 +68,46 @@ class _DetailPageState extends State<DetailPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            // Hero(
-                            //   tag: 'location-img-${item.id}',
-                            //   child: ClipRRect(
-                            //     borderRadius:
-                            //         BorderRadius.circular(AppPadding.p12),
-                            //     child: SizedBox(
-                            //       width: size.width * 0.4,
-                            //       height: size.height * 0.24,
-                            //       child:
-                            //       CachedNetworkImage(
-                            //         fit: BoxFit.cover,
-                            //         imageUrl:
-                            //             'https://www.google.com/imgres?imgurl=https%3A%2F%2Fmhl.org%2Fsites%2Fdefault%2Ffiles%2Fimages%2Fmisc%2Fbookpile3.png&tbnid=SYM4GP4KxY1LHM&vet=12ahUKEwiy_-PSi4-FAxUePhAIHb0ZDLYQMyg8egUIARDMAQ..i&imgrefurl=https%3A%2F%2Fmhl.org%2Fbookclubs&docid=1Ud_RZ9HljyieM&w=485&h=800&q=book&ved=2ahUKEwiy_-PSi4-FAxUePhAIHb0ZDLYQMyg8egUIARDMAQ',
-                            //         placeholder: (context, url) =>
-                            //             const CupertinoActivityIndicator(),
-                            //         errorWidget: (context, url, error) =>
-                            //             const Icon(
-                            //           Icons.menu_book,
-                            //           color: Colors.white,
-                            //         ),
-                            //       ),
-                            //     ),
-                            //   ),
-                            // ),
-                            Column(
-                              children: [
-                                SizedBox(
-                                  width: (size.width * 0.5),
-                                  child: Card(
-                                    color: AppColors.colorBackground,
-                                    shape: RoundedRectangleBorder(
-                                      side: const BorderSide(
-                                          color: Colors.white, width: 1),
-                                      borderRadius:
-                                          BorderRadius.circular(AppSize.s6),
-                                    ),
-                                    child: Padding(
-                                      padding:
-                                          const EdgeInsets.all(AppPadding.p12),
-                                      child: Text(
-                                        '${item.title}',
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Row(
-                                  children: [
-                                    SizedBox(
-                                      width: (size.width * 0.5) / 2,
-                                      child: Card(
-                                        color: AppColors.colorBackground,
-                                        shape: RoundedRectangleBorder(
-                                          side: const BorderSide(
-                                              color: Colors.white, width: 1),
-                                          borderRadius:
-                                              BorderRadius.circular(AppSize.s6),
-                                        ),
-                                        child: const Padding(
-                                          padding:
-                                              EdgeInsets.all(AppPadding.p12),
-                                          child: Text(
-                                            textAlign: TextAlign.center,
-                                            '${1996} Year',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: (size.width * 0.5) / 2,
-                                      child: Card(
-                                        color: AppColors.colorBackground,
-                                        shape: RoundedRectangleBorder(
-                                          side: const BorderSide(
-                                              color: Colors.white, width: 1),
-                                          borderRadius:
-                                              BorderRadius.circular(AppSize.s6),
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(
-                                              AppPadding.p12),
-                                          child: Text(
-                                            textAlign: TextAlign.center,
-                                            '${item.id} Page',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                  ],
-                                ),
-                                SizedBox(
-                                  width: (size.width * 0.5),
-                                  child: Card(
-                                    color: AppColors.colorBackground,
-                                    shape: RoundedRectangleBorder(
-                                      side: const BorderSide(
-                                          color: Colors.white, width: 1),
-                                      borderRadius:
-                                          BorderRadius.circular(AppSize.s6),
-                                    ),
-                                    child: Padding(
-                                      padding:
-                                          const EdgeInsets.all(AppPadding.p12),
-                                      child: Text(
-                                        textAlign: TextAlign.center,
-                                        '${item.authors}',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              ],
-                            )
-                          ],
-                        ),
-                        const SizedBox(height: AppSize.s10),
-                        SizedBox(
+                DetailBody(item, size),
+                Container(
+                  child: loading
+                      ? const Center(
+                          child: CupertinoActivityIndicator(
+                            color: Colors.white,
+                          ),
+                        )
+                      : Container(
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: AppSize.s4),
                           width: double.infinity,
-                          child: Card(
-                            color: AppColors.colorBackground,
-                            shape: RoundedRectangleBorder(
-                              side: const BorderSide(
-                                  color: Colors.white, width: 1),
-                              borderRadius: BorderRadius.circular(AppSize.s6),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(AppPadding.p12),
-                              child: Text(
-                                '${item.subjects}\n${item.bookshelves.toString()}' ??
-                                    'No Description',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              if (filePath != null && filePath!.isNotEmpty) {
+                                print('FilePath is not null -> ${filePath}');
+                                setState(() {
+                                  openView(item);
+                                });
+                              } else {
+                                print('FilePath is null -> ${filePath}');
+                                download(item);
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppSize.s6),
                               ),
+                              backgroundColor: AppColors.colorButton,
+                            ),
+                            icon: const Icon(
+                              Icons.menu_book_outlined,
+                              color: Colors.white,
+                            ),
+                            label: const Text(
+                              'Read the book',
+                              style: TextStyle(color: Colors.white),
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: AppSize.s4),
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        // Navigator.pushNamed(context, Pages.REVIEW);
-
-                        context.read<EBookDatabase>().addResult(item);
-
-                        // downloadFile();
-                        // showWebViewBottomSheetDialog(
-                        //     context, '${item.volumeInfo?.previewLink}');
-
-                        // /storage/emulated/0/Download/84.images
-
-                        /*
-                        FileDownloader.downloadFile(
-                            url: 'https://www.gutenberg.org/ebooks/84.epub3.images',
-                            onProgress: (name, progress) {
-                              setState(() {
-                                // _progress = progress;
-                              });
-                            },
-                            onDownloadCompleted: (value) {
-                              if (kDebugMode) {
-                                print('path $value');
-                              }
-                              setState(() {
-                                // widget.dbHelper.insertAudioBook(
-                                //     widget.item, value);
-                                // _progress = null;
-
-                                // context
-                                //     .read<AudioBookBloc>()
-                                //     .add(LoaderAudioBook());
-                                // context
-                                //     .read<AudioBookBloc>()
-                                //     .stream
-                                //     .firstWhere(
-                                //       (state) => state
-                                //   is! AudioBookLoading,
-                                // );
-                              });
-                            },
-                            notificationType: NotificationType.all); */
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSize.s6),
-                      ),
-                      backgroundColor: AppColors.colorButton,
-                    ),
-                    icon: const Icon(
-                      Icons.menu_book_outlined,
-                      color: Colors.white,
-                    ),
-                    label: const Text(
-                      'Read the book',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
                 )
               ],
             ),
@@ -293,33 +117,101 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 
-  void downloadFile() async {
-    try {
-      final String fileUrl = 'https://www.gutenberg.org/ebooks/84.epub3.images';
-
-      var dio = Dio();
-      Response response = await dio.get(fileUrl,
-          options: Options(responseType: ResponseType.bytes));
-      final String fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
-      final String path = (await getApplicationDocumentsDirectory()).path;
-
-      String savePath;
-      if (Platform.isIOS) {
-        final directory = await getApplicationDocumentsDirectory();
-        savePath = '${directory.path}/';
-      } else if (Platform.isAndroid) {
-        savePath = '/storage/emulated/0/Download/';
+  download(ResultEntity? item) async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      String? firstPart;
+      final deviceInfoPlugin = DeviceInfoPlugin();
+      final deviceInfo = await deviceInfoPlugin.deviceInfo;
+      final allInfo = deviceInfo.data;
+      if (allInfo['version']["release"].toString().contains(".")) {
+        int indexOfFirstDot = allInfo['version']["release"].indexOf(".");
+        firstPart = allInfo['version']["release"].substring(0, indexOfFirstDot);
       } else {
-        // Handle other platforms if necessary
-        return;
+        firstPart = allInfo['version']["release"];
       }
+      int intValue = int.parse(firstPart!);
+      if (intValue >= 13) {
+        await startDownload(item);
+      } else {
+        if (await Permission.storage.isGranted) {
+          await Permission.storage.request();
+          await startDownload(item);
+        } else {
+          await startDownload(item);
+        }
+      }
+    } else {
+      loading = false;
+    }
+  }
 
-      final File file = File('$savePath/2.epub');
-      print('path $savePath/2.epub');
-      await file.writeAsBytes(response.data);
-      print('Fayl yuklandi: ${file.path}');
-    } catch (e) {
-      print('Fayl yuklashda xatolik: $e');
+  startDownload(ResultEntity? item) async {
+    Directory? appDocDir = Platform.isAndroid
+        ? await getExternalStorageDirectory()
+        : await getApplicationDocumentsDirectory();
+
+    String path = '${appDocDir!.path}/${item?.remoteId}.epub';
+    File file = File(path);
+
+    if (!File(path).existsSync()) {
+      await file.create();
+      await dio.download(
+        '${item?.formatsEntity?.applicationEpubZip}',
+        path,
+        deleteOnError: true,
+        onReceiveProgress: (receivedBytes, totalBytes) {
+          setState(() {
+            loading = true;
+          });
+        },
+      ).whenComplete(() {
+        setState(() {
+          loading = false;
+          filePath = path;
+          if (item != null) {
+            item.localPath = filePath;
+            openView(item);
+
+            context.read<EBookDatabase>().addResult(item);
+            print('Saved');
+          }
+        });
+      });
+    } else {
+      setState(() {
+        loading = false;
+        filePath = path;
+      });
+    }
+  }
+
+  openView(ResultEntity? item) async {
+    if (filePath != null && filePath!.isNotEmpty) {
+      VocsyEpub.setConfig(
+        themeColor: AppColors.colorAppBar,
+        identifier: "iosBook",
+        scrollDirection: EpubScrollDirection.ALLDIRECTIONS,
+        allowSharing: true,
+        enableTts: true,
+        nightMode: true,
+      );
+
+      VocsyEpub.locatorStream.listen(
+        (locator) {
+          print('LOCATOR ->: ${locator}');
+
+          context
+              .read<EBookDatabase>()
+              .updateResultLastPage(item?.remoteId, locator.toString());
+        },
+      );
+
+      VocsyEpub.open(
+        filePath!,
+        lastLocation: EpubLocator.fromJson(
+                EBookMapper().parseLastPage(resultEntity?.lastPage)),
+      );
+      VocsyEpub.closeReader();
     }
   }
 }

@@ -5,7 +5,7 @@ import 'item_entity.dart';
 class BookEntity {
   final String? kind;
   final int? totalItems;
-  final List<ItemEntity>? items;
+   List<ItemEntity>? items;
 
   BookEntity({
     this.kind,

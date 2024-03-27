@@ -87,10 +87,15 @@ class ApiClient {
   Future<ApiClientModel> getEBook(
       {required bool isHeader, Map<String, dynamic>? body}) async {
     try {
-      String searchTerm = body?['search'] ?? 'flutter';
+      String? searchTerm = (body != null && body['search'] != null)
+          ? body['search'].toString().toLowerCase()
+          : null;
 
       final res = await _dio.get(
         'https://gutendex.com/books/',
+        queryParameters: {
+          'search': searchTerm,
+        },
       );
 
       return _handlerResponse(res);
@@ -100,8 +105,8 @@ class ApiClient {
   }
 
   /**GUTENBERG EBOOK END*/
-  /**HANDLER*/
 
+  /**HANDLER*/
   ApiClientModel _handlerResponse(Response res) {
     if (res.statusCode! >= 200 && res.statusCode! < 300) {
       return ApiClientModel(

@@ -4,7 +4,7 @@ class EBookEntity {
   final int? count;
   final String? next;
   final dynamic previous;
-  final List<ResultEntity>? results;
+  List<ResultEntity>? results;
 
   EBookEntity({
     this.count,

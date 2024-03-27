@@ -36,26 +36,26 @@ class _RowItemState extends State<ERowItem> {
           mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Hero(
-            //   tag:
-            //       'location-img-${widget.item?.id}',
-            //   child: ClipRRect(
-            //     borderRadius: BorderRadius.circular(AppSize.s12),
-            //     child: SizedBox(
-            //       width: size.width * 0.33,
-            //       height: size.height * 0.20,
-            //       child: CachedNetworkImage(
-            //         fit: BoxFit.cover,
-            //         imageUrl:
-            //             '${widget.item?.formatsEntity?.imageJpeg}',
-            //         placeholder: (context, url) =>
-            //             const CupertinoActivityIndicator(),
-            //         errorWidget: (context, url, error) =>
-            //             const Icon(Icons.menu_book, color: Colors.white,),
-            //       ),
-            //     ),
-            //   ),
-            // ),
+            Hero(
+              tag: 'location-img-${widget.item?.remoteId}',
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppSize.s12),
+                child: SizedBox(
+                  width: size.width * 0.33,
+                  height: size.height * 0.20,
+                  child: CachedNetworkImage(
+                    fit: BoxFit.cover,
+                    imageUrl: '${widget.item?.formatsEntity?.imageJpeg}',
+                    placeholder: (context, url) =>
+                        const CupertinoActivityIndicator(),
+                    errorWidget: (context, url, error) => const Icon(
+                      Icons.menu_book,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(
               width: AppSize.s10,
             ),
@@ -95,49 +95,24 @@ class _RowItemState extends State<ERowItem> {
                     ),
                     onRatingUpdate: (rating) {},
                   ),
-                  Row(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            Navigator.pushNamed(context, Pages.WEBVIEW,
-                                arguments: {
-                                  "url":
-                                      '${widget.item?.formatsEntity?.applicationEpubZip}'
-                                });
-                          });
-                        },
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppSize.s6),
-                          ),
-                          backgroundColor: AppColors.colorButton,
-                        ),
-                        child: const Text(
-                          'Buy',
-                          style: TextStyle(color: Colors.white),
-                        ),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        Navigator.pushNamed(context, Pages.DETAIL,
+                            arguments: {"item": widget.item});
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSize.s6),
                       ),
-                      const SizedBox(width: AppSize.s4),
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {});
-                        },
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppSize.s6),
-                          ),
-                          backgroundColor: AppColors.colorButton,
-                        ),
-                        child: const Text(
-                          'About',
-                          style: TextStyle(
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
+                      backgroundColor: AppColors.colorButton,
+                    ),
+                    child: const Text(
+                      'About',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
                 ],
               ),
             ),

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:books/features/domain/model/result_model.dart';
 import 'package:dartz/dartz.dart';
 
@@ -24,7 +26,7 @@ class EBookMapper {
       for (int i = 0; i < items.length; i++) {
         list.add(
           ResultEntity(
-            id: items[i].id,
+            remoteId: items[i].id,
             title: items[i].title ?? '',
             authors: toAuthorEntity(items[i].authors),
             translators: items[i].translators.toString(),
@@ -52,7 +54,6 @@ class EBookMapper {
     return author;
   }
 
-
   FormatsEntity? toFormatsEntity(Formats? formats) {
     FormatsEntity formatsEntity = FormatsEntity();
     if (formats != null) {
@@ -66,27 +67,29 @@ class EBookMapper {
         applicationOctetStream: formats.applicationOctetStream,
       );
     }
-    print('Alo ${formatsEntity.imageJpeg}');
     return formatsEntity;
   }
 
   ResultEntity? toResultEntityFromDb(ResultModel model) {
     return ResultEntity(
-      id: model.remoteId,
-      title: model.title,
-      authors: model.authors,
-      subjects: model.subjects,
-      bookshelves: model.bookshelves,
-      languages: model.languages,
-      copyright: model.copyright,
-      mediaType: model.mediaType,
-      downloadCount: model.downloadCount,
-    );
+        id: model.id,
+        remoteId: model.remoteId,
+        title: model.title,
+        authors: model.authors,
+        subjects: model.subjects,
+        bookshelves: model.bookshelves,
+        languages: model.languages,
+        copyright: model.copyright,
+        mediaType: model.mediaType,
+        downloadCount: model.downloadCount,
+        localImgPath: model.localImgPath,
+        localPath: model.localPath,
+        lastPage: model.lastPage);
   }
 
   ResultModel? toResultModelFromDb(ResultEntity? entity) {
     return ResultModel(
-      remoteId: entity?.id,
+      remoteId: entity?.remoteId,
       title: entity?.title,
       authors: entity?.authors,
       subjects: entity?.subjects,
@@ -94,10 +97,12 @@ class EBookMapper {
       languages: entity?.languages,
       copyright: entity?.copyright,
       mediaType: entity?.mediaType,
-      downloadCount: entity?.downloadCount, lastPage: '', localPath: '', localImgPath: '',
+      downloadCount: entity?.downloadCount,
+      lastPage: entity?.lastPage,
+      localPath: entity?.localPath,
+      localImgPath: entity?.localImgPath,
     );
   }
-
 
   FormatsEntity parseFormatModelToFormatsEntity(FormatModel formatModel) {
     return FormatsEntity(
@@ -109,7 +114,8 @@ class EBookMapper {
     );
   }
 
-  FormatModel parseFormatEntityToFormatsModel(FormatsEntity? formatsEntity, int? resultRemoteId) {
+  FormatModel parseFormatEntityToFormatsModel(
+      FormatsEntity? formatsEntity, int? resultRemoteId) {
     return FormatModel(
       textHtml: formatsEntity?.textHtml,
       applicationEpubZip: formatsEntity?.applicationEpubZip,
@@ -118,5 +124,17 @@ class EBookMapper {
       applicationOctetStream: formatsEntity?.applicationOctetStream,
       resultModelRemoteId: resultRemoteId,
     );
+  }
+
+  Map<String, dynamic> parseLastPage(String? lastPage) {
+    if (lastPage != null && lastPage.isNotEmpty) {
+      final Map<String, dynamic> decoded = jsonDecode(lastPage);
+
+      if (decoded.containsKey('locations')) {
+        decoded.addAll(decoded['locations']);
+      }
+      return decoded;
+    }
+    return {};
   }
 }

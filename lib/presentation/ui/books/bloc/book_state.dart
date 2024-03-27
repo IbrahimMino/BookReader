@@ -22,7 +22,7 @@ final class BookErrorState extends BookState {
 }
 
 final class EBookSuccessState extends BookState {
-  final EBookEntity bookList;
+  final EBookEntity bookEntity;
 
-  EBookSuccessState({required this.bookList});
+  EBookSuccessState({required this.bookEntity});
 }

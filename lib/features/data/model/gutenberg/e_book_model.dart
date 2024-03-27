@@ -49,12 +49,17 @@ class Author with _$Author {
 @freezed
 class Formats with _$Formats {
   const factory Formats({
+    @JsonKey(name: 'text/html; charset=utf-8')
     String? textHtml,
+    @JsonKey(name: 'application/epub+zip')
     String? applicationEpubZip,
+    @JsonKey(name: 'application/x-mobipocket-ebook')
     String? applicationXMobipocketEbook,
     String? applicationRdfXml,
+    @JsonKey(name: 'image/jpeg')
     String? imageJpeg,
     String? textPlainCharsetUsAscii,
+    @JsonKey(name: 'application/octet-stream')
     String? applicationOctetStream,
   }) = _Formats;
 

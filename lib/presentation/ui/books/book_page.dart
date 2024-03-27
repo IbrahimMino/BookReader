@@ -1,4 +1,7 @@
 import 'package:books/core/resource/app_colors.dart';
+import 'package:books/features/domain/database/ebook_database.dart';
+import 'package:books/features/domain/entity/gutenberg/e_book_entity.dart';
+import 'package:books/features/domain/entity/gutenberg/result_entity.dart';
 import 'package:books/utils/pages.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +12,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/resource/app_values.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/e_row_item.dart';
-import '../../widgets/row_item.dart';
-import '../webview/my_webview.dart';
 import 'bloc/book_bloc.dart';
 import 'bloc/book_event.dart';
 import 'bloc/book_state.dart';
@@ -27,8 +28,10 @@ class _BookPageState extends State<BookPage> {
 
   @override
   void initState() {
-    context.read<BookBloc>().add(EBookFetchData('Flutter'));
+    context.read<BookBloc>().add(EBookFetchData(null));
     // context.read<BookBloc>().add(BookFetchData('Flutter'));
+    // context.read<EBookDatabase>().fetchResult();
+
     super.initState();
   }
 
@@ -36,6 +39,7 @@ class _BookPageState extends State<BookPage> {
   Widget build(BuildContext context) {
     MediaQueryData mediaQueryData = MediaQuery.of(context);
     var size = mediaQueryData.size;
+
 
     return SafeArea(
       child: Scaffold(
@@ -58,7 +62,7 @@ class _BookPageState extends State<BookPage> {
                   return SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (BuildContext context, int index) {
-                        final data = state.bookList.results?[index];
+                        ResultEntity? data = state.bookEntity.results?[index];
                         return Container(
                           margin: const EdgeInsets.symmetric(
                               horizontal: AppSize.s8),
@@ -78,7 +82,7 @@ class _BookPageState extends State<BookPage> {
                           ),
                         );
                       },
-                      childCount: state.bookList.results?.length ?? 0,
+                      childCount: state.bookEntity.results?.length ?? 0,
                     ),
                   );
                 } else if (state is BookErrorState) {
@@ -96,7 +100,9 @@ class _BookPageState extends State<BookPage> {
                 } else {
                   return const SliverToBoxAdapter(
                     child: Center(
-                      child: CupertinoActivityIndicator(),
+                      child: CupertinoActivityIndicator(
+                        color: Colors.white,
+                      ),
                     ),
                   );
                 }

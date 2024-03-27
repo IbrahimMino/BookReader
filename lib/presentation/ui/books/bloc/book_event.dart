@@ -10,7 +10,8 @@ class BookFetchData extends BookEvent {
 }
 
 class EBookFetchData extends BookEvent {
-  final String str;
+  final String? str;
 
   EBookFetchData(this.str);
 }
+

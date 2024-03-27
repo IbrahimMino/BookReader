@@ -17,8 +17,8 @@ import 'features/data/repository/book_repository_imp.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Bloc.observer = AppBlocObserver();
-
   await EBookDatabase.initialize();
+
   runApp(
     ChangeNotifierProvider(
       create: (context) => EBookDatabase(),
@@ -35,8 +35,8 @@ class MyApp extends StatelessWidget {
     return RepositoryProvider(
       create: (context) => BookRepositoryImp(),
       child: BlocProvider(
-        create: (context) =>
-            BookBloc(RepositoryProvider.of<BookRepositoryImp>(context)),
+        create: (context) => BookBloc(
+            RepositoryProvider.of<BookRepositoryImp>(context), EBookDatabase()),
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Book Reading',
